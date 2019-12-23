@@ -6,6 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "gitHooks": {
+    "commit-msg": "node scripts/verify-commit-msg.js"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Bowen7/dual.git"
@@ -17,8 +20,10 @@
   },
   "homepage": "https://github.com/Bowen7/dual#readme",
   "devDependencies": {
+    "chalk": "^3.0.0",
     "eslint": "^6.7.2",
     "vue": "^2.6.10",
-    "vue-template-compiler": "^2.6.10"
+    "vue-template-compiler": "^2.6.10",
+    "yorkie": "^2.0.0"
   }
 }
