@@ -6,12 +6,10 @@ const attrRe = /([^=\s]+)(\s*=\s*(("([^"]*)")|('([^']*)')|[^>\s]+))?/gm
 
 class HtmlParser {
   constructor(options = {}) {
-    const { handler = {} } = options
-    this.handler = handler
+    const { handlers = {} } = options
+    this.handlers = handlers
   }
-  parse(s, oHandler) {
-    if (oHandler) this.contentHandler = oHandler
-
+  parse(s) {
     var lm, rc, index
     var treatAsChars = false
     while (s.length > 0) {
@@ -19,7 +17,7 @@ class HtmlParser {
       if (s.substring(0, 4) == '<!--') {
         index = s.indexOf('-->')
         if (index != -1) {
-          this.contentHandler.comment(s.substring(4, index))
+          this.handlers.comment(s.substring(4, index))
           s = s.substring(index + 3)
           treatAsChars = false
         } else {
@@ -63,10 +61,10 @@ class HtmlParser {
       if (treatAsChars) {
         index = s.indexOf('<')
         if (index == -1) {
-          this.contentHandler.characters(s)
+          this.handlers.characters(s)
           s = ''
         } else {
-          this.contentHandler.characters(s.substring(0, index))
+          this.handlers.characters(s.substring(0, index))
           s = s.substring(index)
         }
       }
@@ -77,11 +75,11 @@ class HtmlParser {
 
   parseStartTag(sTag, sTagName, sRest) {
     var attrs = this.parseAttributes(sTagName, sRest)
-    this.contentHandler.startElement(sTagName, attrs)
+    this.handlers.startElement(sTagName, attrs)
   }
 
   parseEndTag(sTag, sTagName) {
-    this.contentHandler.endElement(sTagName)
+    this.handlers.endElement(sTagName)
   }
 
   parseAttributes(sTagName, s) {
