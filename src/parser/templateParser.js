@@ -19,12 +19,14 @@ class TemplateParser {
           } else {
             this.ast.push(node)
           }
+
+          this.stack.push(node)
         },
         endElement: tagName => {
           let top
           do {
             top = this.stack.pop()
-          } while (top?.name !== tagName && this.stack.length > 0)
+          } while (top.tag !== tagName && this.stack.length > 0)
         },
         characters: text => {
           if (this.stack.length > 0) {
