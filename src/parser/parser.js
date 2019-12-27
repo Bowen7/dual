@@ -1,104 +1,63 @@
-// http://erik.eae.net/simplehtmlparser/simplehtmlparser.js
-
-const startTagRe = /^<([^>\s/]+)((\s+[^=>\s]+(\s*=\s*(("[^"]*")|('[^']*')|[^>\s]+))?)*)\s*\/?\s*>/m
-const endTagRe = /^<\/([^>\s]+)[^>]*>/m
-const attrRe = /([^=\s]+)(\s*=\s*(("([^"]*)")|('([^']*)')|[^>\s]+))?/gm
-
-class HtmlParser {
-  constructor(options = {}) {
-    const { handlers = {} } = options
-    this.handlers = handlers
+import HtmlParser from './htmlParser'
+class Parser {
+  constructor() {
+    this.initHtmlParser()
+    this.ast = []
+    this.stack = []
   }
-  parse(s) {
-    var lm, rc, index
-    var treatAsChars = false
-    while (s.length > 0) {
-      // Comment
-      if (s.substring(0, 4) == '<!--') {
-        index = s.indexOf('-->')
-        if (index != -1) {
-          this.handlers.comment(s.substring(4, index))
-          s = s.substring(index + 3)
-          treatAsChars = false
-        } else {
-          treatAsChars = true
+  initHtmlParser() {
+    this.htmlParser = new HtmlParser({
+      handlers: {
+        startElement: (tagName, attrs) => {
+          const node = createNode(tagName, attrs)
+          let curNode = null
+          if (this.stack.length > 0) {
+            curNode = this.stack[this.stack.length - 1]
+          }
+          if (curNode) {
+            curNode.children.push(node)
+          } else {
+            this.ast.push(node)
+          }
+
+          this.stack.push(node)
+        },
+        endElement: tagName => {
+          let top
+          do {
+            top = this.stack.pop()
+          } while (top.tag !== tagName && this.stack.length > 0)
+        },
+        characters: text => {
+          if (this.stack.length > 0) {
+            const curNode = this.stack[this.stack.length - 1]
+            curNode.content.push(text)
+          }
         }
       }
-
-      // end tag
-      else if (s.substring(0, 2) == '</') {
-        if (endTagRe.test(s)) {
-          lm = RegExp.lastMatch
-          rc = RegExp.rightContext
-
-          lm.replace(endTagRe, (...args) => {
-            return this.parseEndTag(...args)
-          })
-
-          s = rc
-          treatAsChars = false
-        } else {
-          treatAsChars = true
-        }
-      }
-      // start tag
-      else if (s.charAt(0) == '<') {
-        if (startTagRe.test(s)) {
-          lm = RegExp.lastMatch
-          rc = RegExp.rightContext
-
-          lm.replace(startTagRe, (...args) => {
-            return this.parseStartTag(...args)
-          })
-
-          s = rc
-          treatAsChars = false
-        } else {
-          treatAsChars = true
-        }
-      }
-
-      if (treatAsChars) {
-        index = s.indexOf('<')
-        if (index == -1) {
-          this.handlers.characters(s)
-          s = ''
-        } else {
-          this.handlers.characters(s.substring(0, index))
-          s = s.substring(index)
-        }
-      }
-
-      treatAsChars = true
-    }
-  }
-
-  parseStartTag(sTag, sTagName, sRest) {
-    var attrs = this.parseAttributes(sTagName, sRest)
-    this.handlers.startElement(sTagName, attrs)
-  }
-
-  parseEndTag(sTag, sTagName) {
-    this.handlers.endElement(sTagName)
-  }
-
-  parseAttributes(sTagName, s) {
-    var attrs = []
-    s.replace(attrRe, (a0, a1, a2, a3, a4, a5, a6) => {
-      attrs.push(this.parseAttribute(sTagName, a0, a1, a2, a3, a4, a5, a6))
     })
-    return attrs
   }
-
-  parseAttribute(sTagName, sAttribute, sName) {
-    var value = ''
-    if (arguments[7]) value = arguments[8]
-    else if (arguments[5]) value = arguments[6]
-    else if (arguments[3]) value = arguments[4]
-
-    var empty = !value && !arguments[3]
-    return { name: sName, value: empty ? true : value }
+  parse(template) {
+    this.ast = []
+    this.stack = []
+    this.htmlParser.parse(template)
+    return this.ast
   }
 }
 
-export default HtmlParser
+export default new Parser()
+
+function createNode(tagName, attrs) {
+  const attrMap = {}
+  attrs.forEach(attr => {
+    const { name, value } = attr
+    attrMap[name] = value
+  })
+  return {
+    tag: tagName,
+    attrList: attrs,
+    children: [],
+    content: [],
+    attrMap
+  }
+}
