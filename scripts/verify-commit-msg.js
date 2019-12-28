@@ -12,7 +12,9 @@ if (!commitRE.test(msg)) {
       `invalid commit message format.`
     )}\n\n` +
       chalk.red(`  Proper commit message format is required. Examples:\n\n`) +
-      `    ${chalk.green(`feat: feature desc`)}\n`
+      `    ${chalk.green(
+        `feat|fix|docs|style|refactor|test|chore|build: desc`
+      )}\n`
   )
   process.exit(1)
 }
