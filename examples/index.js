@@ -1,29 +1,24 @@
 const webpack = require('webpack')
 const path = require('path')
+const WebpackDevServer = require('webpack-dev-server')
 const config = require('./configs/webpack.config')
 const argv = process.argv
 let example = 'base'
 if (argv.length > 2) {
   example = argv[2]
 }
+
 config.entry = path.resolve(__dirname, `${example}/index.js`)
-console.log(config)
-webpack(config, (err, stats) => {
-  if (err) {
-    console.error(err.stack || err)
-    if (err.details) {
-      console.error(err.details)
-    }
-    return
-  }
 
-  const info = stats.toJson()
-
-  if (stats.hasErrors()) {
-    console.error(info.errors)
+const compiler = webpack(config)
+const devServerOptions = Object.assign({}, config.devServer, {
+  open: true,
+  stats: {
+    colors: true
   }
+})
+const server = new WebpackDevServer(compiler, devServerOptions)
 
-  if (stats.hasWarnings()) {
-    console.warn(info.warnings)
-  }
+server.listen(8080, '127.0.0.1', () => {
+  console.log('Starting server on http://localhost:8080')
 })
