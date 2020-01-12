@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "examples": "node examples/index.js",
+    "dev": "babel-node dev/index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "gitHooks": {
